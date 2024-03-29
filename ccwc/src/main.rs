@@ -2,33 +2,32 @@ pub mod cli;
 
 use clap::Parser;
 use tokio::fs::File;
-use tokio::io::{self, AsyncReadExt, AsyncWriteExt};
+use tokio::io::{self, AsyncWriteExt, AsyncBufReadExt};
 use self::cli::Cli;
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
     let args = Cli::parse();
 
-    let file = File::open(&args.file).await?;
-    let mut reader = io::BufReader::new(file);
+    let file = File::open(&args.file).await.expect(
+        "No such file or directory"
+    );
+    let reader = io::BufReader::new(file);
     let mut stdout = io::stdout();
 
-    let mut count = 0;
-    let mut buffer = vec![0; 128];
+    let (mut byte_count, mut line_count) = (0, 0);
+    let mut lines = reader.lines();
 
-    loop {
-        let bytes = reader.read(&mut buffer).await?;
-
-        if bytes == 0 {
-            break;
-        }
-
+    while let Some(line) = lines.next_line().await? {
         if args.count {
-            count += buffer[..bytes].len();
+            byte_count += line.into_bytes().len() + 1; // include newline
+        }
+        if args.length {
+            line_count += 1;
         }
     }
 
-    stdout.write_all(format!("\t{}\t{}\n", count, &args.file).as_bytes()).await?;
+    stdout.write_all(format!("\t{line_count}\t{byte_count}\t{}\n", &args.file).as_bytes()).await?;
 
     Ok(())
 }
