@@ -12,6 +12,9 @@ pub struct Cli {
     #[arg(short = 'w')]
     pub words: bool,
 
+    #[arg(short = 'm')]
+    pub chars: bool,
+
     #[arg(last = true)]
     pub file: String
 }
