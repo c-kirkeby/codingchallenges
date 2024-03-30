@@ -15,19 +15,22 @@ async fn main() -> io::Result<()> {
     let reader = io::BufReader::new(file);
     let mut stdout = io::stdout();
 
-    let (mut byte_count, mut line_count) = (0, 0);
+    let (mut byte_count, mut line_count, mut word_count) = (0, 0, 0);
     let mut lines = reader.lines();
 
     while let Some(line) = lines.next_line().await? {
         if args.count {
-            byte_count += line.into_bytes().len() + 1; // include newline
+            byte_count += line.as_bytes().len() + 1; // include newline
         }
         if args.length {
             line_count += 1;
         }
+        if args.words {
+            word_count += line.split_whitespace().count();
+        }
     }
 
-    stdout.write_all(format!("\t{line_count}\t{byte_count}\t{}\n", &args.file).as_bytes()).await?;
+    stdout.write_all(format!("\t{line_count}\t{word_count}\t{byte_count}\t{}\n", &args.file).as_bytes()).await?;
 
     Ok(())
 }

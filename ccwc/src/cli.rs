@@ -9,6 +9,9 @@ pub struct Cli {
     #[arg(short = 'l')]
     pub length: bool,
 
+    #[arg(short = 'w')]
+    pub words: bool,
+
     #[arg(last = true)]
     pub file: String
 }
