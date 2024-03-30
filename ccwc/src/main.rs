@@ -2,17 +2,19 @@ pub mod cli;
 
 use clap::Parser;
 use tokio::fs::File;
-use tokio::io::{self, AsyncWriteExt, AsyncBufReadExt};
+use tokio::io::{self, AsyncWriteExt, AsyncBufReadExt, AsyncRead};
 use self::cli::Cli;
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
     let args = Cli::parse();
 
-    let file = File::open(&args.file).await.expect(
-        "No such file or directory"
-    );
-    let reader = io::BufReader::new(file);
+    let input: Box<dyn AsyncRead + Unpin> = match args.file.as_deref() {
+        None => Box::new(io::stdin()),
+        Some(file) => Box::new(File::open(file).await?),
+    };
+
+    let reader = io::BufReader::new(input);
     let mut stdout = io::stdout();
 
     let flags = args.count || args.length || args.words || args.chars;
@@ -41,7 +43,7 @@ async fn main() -> io::Result<()> {
         .collect::<Vec<String>>()
         .concat();
 
-    stdout.write_all(format!("{output}\t{}\n", &args.file).as_bytes()).await?;
+    stdout.write_all(format!("{output}\t{}\n", &args.file.unwrap_or("".to_string())).as_bytes()).await?;
 
     Ok(())
 }

@@ -16,6 +16,6 @@ pub struct Cli {
     pub chars: bool,
 
     #[arg(last = true)]
-    pub file: String
+    pub file: Option<String>
 }
 
