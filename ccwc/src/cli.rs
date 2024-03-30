@@ -1,7 +1,7 @@
 use clap::Parser;
 
 #[derive(Parser)]
-#[command()]
+#[command(name = "ccwc")]
 pub struct Cli {
     #[arg(short = 'c')]
     pub count: bool,
